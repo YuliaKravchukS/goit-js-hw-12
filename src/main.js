@@ -16,9 +16,9 @@ const refs = {
     
 }
 
-let page = 1;
+let _page = 1;
 const limit = 15;
-const totalPages = Math.ceil(500 / limit);
+const totalPages = Math.ceil(500/ limit);
 
 refs.formEl.addEventListener('submit', onFormSubmit);
 refs.loader.style.visibility = 'hidden';
@@ -30,31 +30,30 @@ async function onFormSubmit(e) {
     const value = e.target.elements.valueGallery.value;
     if (value !== '') {
         refs.loader.style.visibility = 'visible';
-    }        
-    
+    }  
     const data = await getUrl(value);
         if (data.length > 0 & value !== '') {
             refs.loader.style.visibility = 'hidden';
             renderImages(data);
-            page += 1;
+            _page += 1;
             
-            if (page > 1) {
+            if (_page > 1) {
                 refs.btnLoad.style.visibility = 'visible';
                 refs.btnLoad.addEventListener('click', async () => {
+
+            if (_page > totalPages) {
+            return iziToast.error({
+                position: "bottomRight",
+                color: 'blue',
+                message: "We're sorry, there are no more posts to load"
+            });
+            
+        };
                     const data = await getUrl(value);
                     renderImages(data);
-                    page += 1;
+                    _page += 1;
                 });
-            }if (condition) {
-                
-            } else {
-                
             }
-            value.addEventListener('change', () => {
-                    refs.btnLoad.style.visibility = 'hidden'; 
-                    page = 1;
-               });
-            
         } else {
             refs.loader.style.visibility = 'hidden';
             iziToast.error({
@@ -62,7 +61,6 @@ async function onFormSubmit(e) {
                 position: 'topRight',
             })
         }
-    
         
     e.target.reset();
 };
@@ -81,10 +79,12 @@ async function getUrl(clientValue) {
         orientation: 'horizontal',
         safesearch: true,
         per_page: limit,
-        page: page,
+        page: _page,
         
         
-    }});
+    }
+    });
+    
     return response.data.hits;
 
 }
