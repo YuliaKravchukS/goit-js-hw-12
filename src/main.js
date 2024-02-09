@@ -9,7 +9,7 @@ import Axios from "axios";
 
 const refs = {
     formEl: document.querySelector('.form'),
-    input: document.querySelector('#valueGallery'),
+    input: document.querySelector('.valueGallery'),
     galleryEl: document.querySelector('.gallery'),
     loader: document.querySelector('.loader'),
     btnLoad: document.querySelector('.btn-load'),
@@ -18,49 +18,35 @@ const refs = {
 
 let _page = 1;
 const limit = 15;
-const totalPages = Math.ceil(500/ limit);
+const totalPages = Math.ceil(500 / limit);
+let value = '';
+console.log(value);
 
 refs.formEl.addEventListener('submit', onFormSubmit);
 refs.loader.style.visibility = 'hidden';
 
-
 async function onFormSubmit(e) {
     e.preventDefault();
     refs.galleryEl.innerHTML = '';
-    const value = e.target.elements.valueGallery.value;
+    value = e.target.elements.valueGallery.value.trim();
     if (value !== '') {
         refs.loader.style.visibility = 'visible';
-    }  
-    const data = await getUrl(value);
-        if (data.length > 0 & value !== '') {
-            refs.loader.style.visibility = 'hidden';
-            renderImages(data);
-            _page += 1;
-            
-            if (_page > 1) {
-                refs.btnLoad.style.visibility = 'visible';
-                refs.btnLoad.addEventListener('click', async () => {
-
-            if (_page > totalPages) {
-            return iziToast.error({
-                position: "bottomRight",
-                color: 'blue',
-                message: "We're sorry, there are no more posts to load"
-            });
-            
-        };
-                    const data = await getUrl(value);
-                    renderImages(data);
-                    _page += 1;
-                });
-            }
-        } else {
+    } 
+    _page = 1;
+    const data = await getUrl();
+    if (data.hits.length > 0 & value !== '') {
+        refs.loader.style.visibility = 'hidden';
+        renderImages(data.hits);
+        refs.btnLoad.style.visibility = 'visible';
+    }else {
             refs.loader.style.visibility = 'hidden';
             iziToast.error({
                 message: 'Sorry, there are no images matching your search query. Please try again!',
                 position: 'topRight',
             })
         }
+            
+            
         
     e.target.reset();
 };
@@ -70,27 +56,23 @@ const axios = Axios.create({
     baseURL: 'https://pixabay.com/api/',
     
 })
-async function getUrl(clientValue) {
+async function getUrl() {
 
     const response =await axios.get('',{params: {
         key: '42132466-2eec74b8e2a534f613ea758a4',
-        q: clientValue,
+        q: value,
         image_type: 'photo',
         orientation: 'horizontal',
         safesearch: true,
         per_page: limit,
         page: _page,
         
-        
     }
     });
     
-    return response.data.hits;
+    return response.data;
 
 }
-
-
-
 function imageTemplate(img) {
     const {webformatURL, largeImageURL, tags, likes, views, comments, downloads} = img;
     
@@ -111,8 +93,6 @@ function imageTemplate(img) {
     </li>
     `;
 }
-
-
 function imagesTemplate(images) {
     return images.map(imageTemplate).join('');
 }
@@ -121,3 +101,26 @@ function renderImages(images) {
     refs.galleryEl.insertAdjacentHTML('beforeend',markup);
     let simpleLightBox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 }).refresh();
 };
+
+
+refs.btnLoad.addEventListener('click', onBtnLoadClick);
+
+async function onBtnLoadClick() {
+    _page += 1;
+      
+    const data = await getUrl();
+    renderImages(data.hits);
+    checkTotalHits(data.totalHits);
+    
+
+} 
+
+function checkTotalHits(totalPages) {
+    if (_page > totalPages) { 
+        return iziToast.error({
+        position: "bottomRight",
+        color: 'blue',
+        message: "We're sorry, there are no more posts to load"
+        });
+    };
+    }
