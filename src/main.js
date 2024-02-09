@@ -18,9 +18,8 @@ const refs = {
 
 let _page = 1;
 const limit = 15;
-const totalPages = Math.ceil(500 / limit);
+let totalPages = 0;
 let value = '';
-console.log(value);
 
 refs.formEl.addEventListener('submit', onFormSubmit);
 refs.loader.style.visibility = 'hidden';
@@ -28,23 +27,29 @@ refs.loader.style.visibility = 'hidden';
 async function onFormSubmit(e) {
     e.preventDefault();
     refs.galleryEl.innerHTML = '';
+    refs.btnLoad.style.visibility = 'hidden';
     value = e.target.elements.valueGallery.value.trim();
     if (value !== '') {
         refs.loader.style.visibility = 'visible';
     } 
     _page = 1;
-    const data = await getUrl();
-    if (data.hits.length > 0 & value !== '') {
-        refs.loader.style.visibility = 'hidden';
-        renderImages(data.hits);
-        refs.btnLoad.style.visibility = 'visible';
-    }else {
+    try {
+        const data = await getUrl();
+        if (data.hits.length > 0 & value !== '') {
+            refs.loader.style.visibility = 'hidden';
+            renderImages(data.hits);
+            refs.btnLoad.style.visibility = 'visible';
+        } else {
             refs.loader.style.visibility = 'hidden';
             iziToast.error({
                 message: 'Sorry, there are no images matching your search query. Please try again!',
                 position: 'topRight',
             })
         }
+    } catch (err) {
+        totalPages = 0;
+        checkTotalHits(totalPages);
+    }
             
             
         
@@ -106,19 +111,20 @@ function renderImages(images) {
 refs.btnLoad.addEventListener('click', onBtnLoadClick);
 
 async function onBtnLoadClick() {
-    _page += 1;
-      
+    _page += 1; 
+    refs.loader.style.visibility = 'visible';
     const data = await getUrl();
     renderImages(data.hits);
     checkTotalHits(data.totalHits);
-    
-
+    refs.loader.style.visibility = 'hidden';
 } 
 
-function checkTotalHits(totalPages) {
-    if (_page > totalPages) { 
+function checkTotalHits(totalHits) {
+    totalPages = Math.ceil(totalHits / limit);
+    if (totalPages<=_page) { 
+        refs.btnLoad.style.visibility = 'hidden';
         return iziToast.error({
-        position: "bottomRight",
+        position: "topRight",
         color: 'blue',
         message: "We're sorry, there are no more posts to load"
         });
