@@ -50,9 +50,6 @@ async function onFormSubmit(e) {
         totalPages = 0;
         checkTotalHits(totalPages);
     }
-            
-            
-        
     e.target.reset();
 };
 
@@ -62,7 +59,6 @@ const axios = Axios.create({
     
 })
 async function getUrl() {
-
     const response =await axios.get('',{params: {
         key: '42132466-2eec74b8e2a534f613ea758a4',
         q: value,
@@ -74,13 +70,10 @@ async function getUrl() {
         
     }
     });
-    
     return response.data;
-
 }
 function imageTemplate(img) {
     const {webformatURL, largeImageURL, tags, likes, views, comments, downloads} = img;
-    
     return `<li>
     <div class="card">
     <div class="img-container">
@@ -117,6 +110,12 @@ async function onBtnLoadClick() {
     renderImages(data.hits);
     checkTotalHits(data.totalHits);
     refs.loader.style.visibility = 'hidden';
+    const card = document.querySelector('.card');
+    let rect = 2 * card.getBoundingClientRect().height;
+    window.scrollBy({
+    top: rect,
+    behavior: 'smooth',
+});
 } 
 
 function checkTotalHits(totalHits) {
